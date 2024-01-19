@@ -1,15 +1,25 @@
-import fastify from 'fastify'
+const express = require('express');
+const app = express();
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server);
 
-const server = fastify()
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/index.html');
+});
 
-server.get('/ping', async (request, reply) => {
-    return 'pong\n'
-})
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected');
+    });
+    socket.on('chat message', (msg) => {
+        console.log('message: ' + msg);
+        io.emit('chat message', msg);
+    });
+});
 
-server.listen({ port: 8080 }, (err, address) => {
-    if (err) {
-        console.error(err)
-        process.exit(1)
-    }
-    console.log(`Server listening at ${address}`)
-})
+server.listen(3000, () => {
+    console.log('listening on *:3000');
+});
